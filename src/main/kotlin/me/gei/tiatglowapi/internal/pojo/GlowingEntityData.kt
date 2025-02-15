@@ -1,5 +1,6 @@
 package me.gei.tiatglowapi.internal.pojo
 
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 
 /**
@@ -9,6 +10,6 @@ import org.bukkit.ChatColor
  **/
 class GlowingEntityData(
     val teamID: String,
-    var color: ChatColor,
+    var color: NamedTextColor,
     val otherFlags: Byte,
 )

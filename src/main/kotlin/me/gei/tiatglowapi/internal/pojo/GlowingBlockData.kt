@@ -1,5 +1,6 @@
 package me.gei.tiatglowapi.internal.pojo
 
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 
 /**
@@ -10,5 +11,5 @@ import org.bukkit.ChatColor
 class GlowingBlockData(
     val entityID: Int,
     val entityUUID: String,
-    var color: ChatColor,
+    var color: NamedTextColor,
 )

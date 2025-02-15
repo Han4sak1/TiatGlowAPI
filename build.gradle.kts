@@ -25,11 +25,20 @@ taboolib {
 }
 
 repositories {
+    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
     mavenCentral()
 }
 
 dependencies {
+    compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
     compileOnly("ink.ptms.core:v11200:11200")
+    compileOnly("ink.ptms:nms-all:1.0.0")
+    compileOnly("ink.ptms.core:v11802:11802:mapped")
+    compileOnly("ink.ptms.core:v11904:11904:mapped")
+    compileOnly("ink.ptms.core:v12001:12001:mapped")
+    compileOnly("ink.ptms.core:v12004:12004:mapped")
+    compileOnly("ink.ptms.core:v12006:12006:mapped")
+    compileOnly("ink.ptms.core:v12101:12101:mapped")
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 }

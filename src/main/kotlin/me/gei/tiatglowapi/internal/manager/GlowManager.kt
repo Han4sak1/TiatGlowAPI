@@ -1,18 +1,16 @@
 package me.gei.tiatglowapi.internal.manager
 
+import me.gei.tiatglowapi.internal.nms.NMS
 import me.gei.tiatglowapi.internal.pojo.GlowingBlockData
 import me.gei.tiatglowapi.internal.pojo.GlowingEntityData
-import me.gei.tiatglowapi.internal.util.NMSUtil
-import me.gei.tiatglowapi.internal.util.NMSUtil.sendCreateDummyEntityShulkerOn
-import me.gei.tiatglowapi.internal.util.NMSUtil.getEntityFlags
+import me.gei.tiatglowapi.internal.util.NMSUtil.sendByteDataItemsEntityMetadataPacket
 import me.gei.tiatglowapi.internal.util.NMSUtil.sendColorBasedTeamCreatePacket
 import me.gei.tiatglowapi.internal.util.NMSUtil.sendColorBasedTeamDestroyPacket
 import me.gei.tiatglowapi.internal.util.NMSUtil.sendColorBasedTeamEntityAddPacket
 import me.gei.tiatglowapi.internal.util.NMSUtil.sendColorBasedTeamEntityRemovePacket
-import me.gei.tiatglowapi.internal.util.NMSUtil.sendEntityMetadataPacket
+import me.gei.tiatglowapi.internal.util.NMSUtil.sendCreateDummyEntityShulkerOn
 import me.gei.tiatglowapi.internal.util.NMSUtil.sendRemoveDummyEntityShulker
-import net.minecraft.server.v1_12_R1.DataWatcher
-import org.bukkit.ChatColor
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Location
 import org.bukkit.block.Block
 import org.bukkit.entity.Entity
@@ -36,7 +34,7 @@ internal object GlowManager {
     /** 发光生物缓存 玩家 -> (EntityID -> 发光生物数据) **/
     private val glowingEntities: ConcurrentHashMap<Player, ConcurrentHashMap<Int, GlowingEntityData>> = ConcurrentHashMap()
     /** 玩家队伍 玩家 -> (队伍颜色 -> 队伍成员teamID)**/
-    private val teams: ConcurrentHashMap<Player, ConcurrentHashMap<ChatColor, CopyOnWriteArraySet<String>>> = ConcurrentHashMap()
+    private val teams: ConcurrentHashMap<Player, ConcurrentHashMap<NamedTextColor, CopyOnWriteArraySet<String>>> = ConcurrentHashMap()
 
     private const val GLOWING_FLAG: Byte = (1 shl 6).toByte()
 
@@ -49,9 +47,10 @@ internal object GlowManager {
      * @param receiver 观察者
      * @param color 颜色, null为取消发光
      */
-    fun setGlowing(entity: Entity, receiver: Player, color: ChatColor?) {
+    fun setGlowing(entity: Entity, receiver: Player, color: NamedTextColor?) {
         val teamID = if (entity is Player) entity.name else entity.uniqueId.toString()
-        setGlowing(entity.entityId, teamID, receiver, color, entity.getEntityFlags())
+        val flags = NMS.INSTANCE.getEntityFlags(entity) ?: return
+        setGlowing(entity.entityId, teamID, receiver, color, flags)
     }
 
     /**
@@ -60,7 +59,7 @@ internal object GlowManager {
      * @param receiver 观察者
      * @param color 颜色, null为取消发光
      */
-    fun setGlowing(block: Block, receiver: Player, color: ChatColor?) {
+    fun setGlowing(block: Block, receiver: Player, color: NamedTextColor?) {
         val spawnLocation = Location(block.location.world, block.location.blockX.toDouble() + 0.5, block.location.blockY.toDouble(), block.location.blockZ.toDouble() + 0.5)
 
         //如果不存在玩家数据
@@ -103,7 +102,7 @@ internal object GlowManager {
         }
     }
 
-    private fun setGlowing(entityID: Int, teamID: String, receiver: Player, color: ChatColor?, otherFlags: Byte) {
+    private fun setGlowing(entityID: Int, teamID: String, receiver: Player, color: NamedTextColor?, otherFlags: Byte) {
         //如果不存在玩家数据
         if (!glowingEntities.containsKey(receiver)) {
             //判断颜色是否为null，如果是则直接返回
@@ -137,7 +136,7 @@ internal object GlowManager {
         }
     }
 
-    private fun setGlowing(entityID: Int, entityUUID: String, receiver: Player, color: ChatColor?) {
+    private fun setGlowing(entityID: Int, entityUUID: String, receiver: Player, color: NamedTextColor?) {
         setGlowing(entityID, entityUUID, receiver, color, 0)
     }
 
@@ -207,8 +206,7 @@ internal object GlowManager {
     }
 
     private fun setMetaData(receiver: Player, entityID: Int, flags: List<Byte>) {
-        val dataWatcherItem = flags.map { DataWatcher.Item(NMSUtil.DATA_SHARED_FLAGS_ID, it) }
-        receiver.sendEntityMetadataPacket(entityID, dataWatcherItem)
+        receiver.sendByteDataItemsEntityMetadataPacket(entityID, flags)
     }
 
     @SubscribeEvent

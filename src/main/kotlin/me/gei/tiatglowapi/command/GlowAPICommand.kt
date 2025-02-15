@@ -1,7 +1,7 @@
 package me.gei.tiatglowapi.command
 
-import javafx.scene.effect.Glow
 import me.gei.tiatglowapi.internal.manager.GlowManager
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -31,7 +31,7 @@ object GlowAPICommand {
                 if (sender !is Player) return@execute
 
                 sender.getNearbyEntities(5.0, 5.0, 5.0).forEach {
-                    GlowManager.setGlowing(it, sender, ChatColor.valueOf(context["color"]))
+                    GlowManager.setGlowing(it, sender, NamedTextColor.RED)
                 }
             }
         }
@@ -56,7 +56,7 @@ object GlowAPICommand {
             execute<CommandSender> { sender, context, argument ->
                 if (sender !is Player) return@execute
 
-                GlowManager.setGlowing(sender.groundBlock, sender, ChatColor.valueOf(context["color"]))
+                GlowManager.setGlowing(sender.groundBlock, sender, NamedTextColor.AQUA)
             }
         }
     }

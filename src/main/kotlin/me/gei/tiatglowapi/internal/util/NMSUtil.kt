@@ -1,18 +1,24 @@
 package me.gei.tiatglowapi.internal.util
 
-import net.minecraft.server.v1_12_R1.*
-import net.minecraft.server.v1_12_R1.ScoreboardTeamBase.EnumNameTagVisibility
-import net.minecraft.server.v1_12_R1.ScoreboardTeamBase.EnumTeamPush
+import com.github.retrooper.packetevents.PacketEvents
+import com.github.retrooper.packetevents.protocol.entity.data.EntityData
+import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes
+import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes
+import com.github.retrooper.packetevents.util.Vector3d
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnLivingEntity
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams.ScoreBoardTeamInfo
+import me.gei.tiatglowapi.internal.nms.NMS
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.minecraft.server.v1_12_R1.EntityShulker
+import net.minecraft.server.v1_12_R1.PacketPlayOutEntityDestroy
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer
-import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
-import taboolib.common.util.unsafeLazy
-import taboolib.library.reflex.Reflex.Companion.setLocalProperty
-import taboolib.library.reflex.ReflexClass
 
 /**
  * me.gei.tiatglowapi.internal.util
@@ -21,67 +27,68 @@ import taboolib.library.reflex.ReflexClass
  **/
 internal object NMSUtil {
 
-    private val nmsEntityClass by unsafeLazy {
-        ReflexClass.of(net.minecraft.server.v1_12_R1.Entity::class.java)
+    fun Player.sendByteDataItemsEntityMetadataPacket(entityID: Int, dataItems: List<Byte>) {
+        val packetPlayOutEntityMetadata = WrapperPlayServerEntityMetadata(
+            entityID,
+            dataItems.map { EntityData(0, EntityDataTypes.BYTE, it) }
+        )
+
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutEntityMetadata)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    val DATA_SHARED_FLAGS_ID by unsafeLazy {
-        nmsEntityClass.getLocalField("Z").get() as DataWatcherObject<Byte>
+    fun Player.sendColorBasedTeamCreatePacket(color: NamedTextColor) {
+        val packetPlayOutScoreboardTeam = WrapperPlayServerTeams(
+            "glow-$color",
+            WrapperPlayServerTeams.TeamMode.CREATE,
+            ScoreBoardTeamInfo(
+                    Component.text("glow-$color"),
+                    null,
+                    null,
+                    WrapperPlayServerTeams.NameTagVisibility.ALWAYS,
+                    WrapperPlayServerTeams.CollisionRule.NEVER,
+                    color,
+                    WrapperPlayServerTeams.OptionData.NONE
+                ),
+            emptyList()
+        )
+
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutScoreboardTeam)
     }
 
-    fun Entity.getEntityFlags(): Byte {
-        val nmsEntity = (this as CraftEntity).handle
-        val dataWatcher = nmsEntity.dataWatcher
+    fun Player.sendColorBasedTeamDestroyPacket(color: NamedTextColor) {
+        val info: ScoreBoardTeamInfo? = null
+        val packetPlayOutScoreboardTeam = WrapperPlayServerTeams(
+            "glow-$color",
+            WrapperPlayServerTeams.TeamMode.REMOVE,
+            info,
+            emptyList<String>()
+        )
 
-        return dataWatcher.get(DATA_SHARED_FLAGS_ID)
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutScoreboardTeam)
     }
 
-    fun Player.sendEntityMetadataPacket(entityID: Int, dataItems: List<DataWatcher.Item<*>>) {
-        val packetPlayOutEntityMetadata = PacketPlayOutEntityMetadata()
-        packetPlayOutEntityMetadata.setLocalProperty("a", entityID)
-        packetPlayOutEntityMetadata.setLocalProperty("b", dataItems)
+    fun Player.sendColorBasedTeamEntityAddPacket(teamID: String, color: NamedTextColor) {
+        val info: ScoreBoardTeamInfo? = null
+        val packetPlayOutScoreboardTeam = WrapperPlayServerTeams(
+            "glow-$color",
+            WrapperPlayServerTeams.TeamMode.ADD_ENTITIES,
+            info,
+            listOf(teamID)
+        )
 
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutEntityMetadata)
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutScoreboardTeam)
     }
 
-    fun Player.sendColorBasedTeamCreatePacket(color: ChatColor) {
-        val packetPlayOutScoreboardTeam = PacketPlayOutScoreboardTeam()
-        packetPlayOutScoreboardTeam.setLocalProperty("a", "glow-${color.char}")
-        packetPlayOutScoreboardTeam.setLocalProperty("c", color.toString())
-        packetPlayOutScoreboardTeam.setLocalProperty("e", EnumNameTagVisibility.ALWAYS.e)
-        packetPlayOutScoreboardTeam.setLocalProperty("f", EnumTeamPush.NEVER.e)
-        packetPlayOutScoreboardTeam.setLocalProperty("g", color.ordinal)
-        packetPlayOutScoreboardTeam.setLocalProperty("h", emptyList<String>())
-        packetPlayOutScoreboardTeam.setLocalProperty("i", 0)
+    fun Player.sendColorBasedTeamEntityRemovePacket(teamID: String, color: NamedTextColor) {
+        val info: ScoreBoardTeamInfo? = null
+        val packetPlayOutScoreboardTeam = WrapperPlayServerTeams(
+            "glow-$color",
+            WrapperPlayServerTeams.TeamMode.REMOVE_ENTITIES,
+            info,
+            listOf(teamID)
+        )
 
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutScoreboardTeam)
-    }
-
-    fun Player.sendColorBasedTeamDestroyPacket(color: ChatColor) {
-        val packetPlayOutScoreboardTeam = PacketPlayOutScoreboardTeam()
-        packetPlayOutScoreboardTeam.setLocalProperty("a", "glow-${color.char}")
-        packetPlayOutScoreboardTeam.setLocalProperty("i", 1)
-
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutScoreboardTeam)
-    }
-
-    fun Player.sendColorBasedTeamEntityAddPacket(teamID: String, color: ChatColor) {
-        val packetPlayOutScoreboardTeam = PacketPlayOutScoreboardTeam()
-        packetPlayOutScoreboardTeam.setLocalProperty("a", "glow-${color.char}")
-        packetPlayOutScoreboardTeam.setLocalProperty("h", listOf(teamID))
-        packetPlayOutScoreboardTeam.setLocalProperty("i", 3)
-
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutScoreboardTeam)
-    }
-
-    fun Player.sendColorBasedTeamEntityRemovePacket(teamID: String, color: ChatColor) {
-        val packetPlayOutScoreboardTeam = PacketPlayOutScoreboardTeam()
-        packetPlayOutScoreboardTeam.setLocalProperty("a", "glow-${color.char}")
-        packetPlayOutScoreboardTeam.setLocalProperty("h", listOf(teamID))
-        packetPlayOutScoreboardTeam.setLocalProperty("i", 4)
-
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutScoreboardTeam)
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutScoreboardTeam)
     }
 
     fun Player.sendCreateDummyEntityShulkerOn(location: Location): Pair<Int, String> {
@@ -92,11 +99,24 @@ internal object NMSUtil {
         nmsShulker.isNoAI = true
         nmsShulker.isInvisible = true
         nmsShulker.collides = false
-        val uuid = nmsShulker.uniqueID
-        val entityID = nmsShulker.id
+        val (entityID, uuid) = NMS.INSTANCE.spawnDummyShulker(location)
 
-        val packetPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving(nmsShulker)
-        (this as CraftPlayer).handle.playerConnection.sendPacket(packetPlayOutSpawnEntityLiving)
+        val packetPlayOutSpawnEntityLiving = WrapperPlayServerSpawnLivingEntity(
+            entityID,
+            uuid,
+            EntityTypes.SHULKER,
+            com.github.retrooper.packetevents.protocol.world.Location(location.x, location.y, location.z, location.yaw, location.pitch),
+            0f,
+            Vector3d.zero(),
+            listOf(
+                EntityData(0, EntityDataTypes.BYTE, 0x20), //隐形
+                EntityData(11, EntityDataTypes.BYTE, 0x01), //无重力
+                EntityData(12, EntityDataTypes.BYTE, 0x01), //无AI
+                EntityData(13, EntityDataTypes.BYTE, 0x01) //静音
+            )
+        )
+
+        PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutSpawnEntityLiving)
 
         return Pair(entityID, uuid.toString())
     }

@@ -1,6 +1,7 @@
 package me.gei.tiatglowapi.api
 
 import me.gei.tiatglowapi.internal.manager.GlowManager
+import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.ChatColor
 import org.bukkit.block.Block
 import org.bukkit.entity.Entity
@@ -18,7 +19,7 @@ object GlowAPI {
      * @param receiver 观察者
      * @param color 颜色, null为取消发光
      */
-    fun setGlowing(entity: Entity, receiver: Player, color: ChatColor?) {
+    fun setGlowing(entity: Entity, receiver: Player, color: NamedTextColor?) {
         GlowManager.setGlowing(entity, receiver, color)
     }
 
@@ -28,7 +29,7 @@ object GlowAPI {
      * @param receiver 观察者
      * @param color 颜色, null为取消发光
      */
-    fun setGlowing(block: Block, receiver: Player, color: ChatColor?) {
+    fun setGlowing(block: Block, receiver: Player, color: NamedTextColor?) {
         GlowManager.setGlowing(block, receiver, color)
     }
 }

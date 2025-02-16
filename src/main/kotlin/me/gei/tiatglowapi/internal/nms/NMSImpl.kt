@@ -15,21 +15,6 @@ typealias NMSUniversalEntity = net.minecraft.world.entity.Entity
 typealias NMSLegacyDataWatcherObjectByte = net.minecraft.server.v1_12_R1.DataWatcherObject<Byte>
 typealias NMSUniversalDataWatcherObjectByte = net.minecraft.network.syncher.DataWatcherObject<Byte>
 
-typealias NMS12R1LegacyEntityFallingBlock = net.minecraft.server.v1_12_R1.EntityFallingBlock
-typealias NMS16R3LegacyEntityFallingBlock = net.minecraft.server.v1_16_R3.EntityFallingBlock
-typealias NMSUniversalEntityFallingBlock = net.minecraft.world.entity.item.EntityFallingBlock
-
-typealias NMS12R1LegacyEntityShulker = net.minecraft.server.v1_12_R1.EntityShulker
-typealias NMS16R3LegacyEntityShulker = net.minecraft.server.v1_16_R3.EntityShulker
-typealias NMSUniversalEntityShulker = net.minecraft.world.entity.monster.EntityShulker
-
-typealias NMS16R3LegacyEntityTypes = net.minecraft.server.v1_16_R3.EntityTypes<*>
-typealias NMSUniversalEntityTypes = net.minecraft.world.entity.EntityTypes<*>
-
-typealias NMS12R1LegacyCraftWorld = org.bukkit.craftbukkit.v1_12_R1.CraftWorld
-typealias NMS16R3LegacyCraftWorld = org.bukkit.craftbukkit.v1_16_R3.CraftWorld
-typealias NMSUniversalCraftWorld = org.bukkit.craftbukkit.v1_20_R3.CraftWorld
-
 typealias NMSLegacyDataWatcher = net.minecraft.server.v1_12_R1.DataWatcher
 typealias NMSUniversalDataWatcher = net.minecraft.network.syncher.DataWatcher
 
@@ -41,6 +26,8 @@ typealias BukkitCraftEntity = org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity
 typealias Bukkit12R1LegacyCraftBlock = org.bukkit.craftbukkit.v1_12_R1.block.CraftBlock
 typealias Bukkit16R3LegacyCraftBlock = org.bukkit.craftbukkit.v1_16_R3.block.CraftBlock
 typealias BukkitUniversalCraftBlock = org.bukkit.craftbukkit.v1_20_R3.block.CraftBlock
+
+typealias BukkitUniversalCraftBlockData = org.bukkit.craftbukkit.v1_20_R3.block.data.CraftBlockData
 
 /**
  * TiatGlowAPIKT
@@ -132,7 +119,7 @@ class NMSImpl: NMS() {
             }
         } else return nmsUniversalBlockInst.invokeMethod<Int>(
             "getId",
-            (location.block as BukkitUniversalCraftBlock).nms,
+            ((location.block as BukkitUniversalCraftBlock).blockData as BukkitUniversalCraftBlockData).state,
             isStatic = true
         )
     }

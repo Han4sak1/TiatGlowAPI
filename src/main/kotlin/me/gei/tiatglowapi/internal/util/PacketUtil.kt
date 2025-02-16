@@ -97,12 +97,10 @@ internal object PacketUtil {
     }
 
     fun Player.sendCreateDummyFallingBlockOn(location: Location): Pair<Int, String>? {
-        //FIXME 在11800以上不起作用
+        //经测试在11802，11904或更高版本FallingBlock不可被设为除原版方块（如沙子等）以外的材质，故此方法不提供给高版本使用
         val entityUUID = UUID.randomUUID()
         val entityID = SpigotReflectionUtil.generateEntityId()
         val blockCombinedID = NMS.INSTANCE.getCombinedID(location) ?: return null
-
-        info("方块CombineID 为 $blockCombinedID")
 
         val packetPlayOutSpawnEntity = WrapperPlayServerSpawnEntity(
             entityID,

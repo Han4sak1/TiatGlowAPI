@@ -3,8 +3,8 @@ package me.gei.tiatglowapi.internal.manager
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes
 import me.gei.tiatglowapi.internal.nms.NMS
 import me.gei.tiatglowapi.internal.pojo.BlockGlowMode
-import me.gei.tiatglowapi.internal.pojo.BlockGlowMode.CLASSIC
-import me.gei.tiatglowapi.internal.pojo.BlockGlowMode.STYLE
+import me.gei.tiatglowapi.internal.pojo.BlockGlowMode.CLASSIC_11200_11605_UNIVERSAL
+import me.gei.tiatglowapi.internal.pojo.BlockGlowMode.STYLE_11200_11605_ONLY
 import me.gei.tiatglowapi.internal.pojo.GlowingBlockData
 import me.gei.tiatglowapi.internal.pojo.GlowingEntityData
 import me.gei.tiatglowapi.internal.util.PacketUtil.sendColorBasedTeamCreatePacket
@@ -27,6 +27,9 @@ import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import taboolib.common.platform.event.EventPriority
 import taboolib.common.platform.event.SubscribeEvent
+import taboolib.common.platform.function.warning
+import taboolib.common.util.t
+import taboolib.module.nms.MinecraftVersion
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.experimental.and
@@ -92,8 +95,19 @@ internal object GlowManager {
         if (!glowingBlocks.containsKey(receiver)) {
             //创建发光效果并更新颜色
             val pair = when (mode) {
-                STYLE -> receiver.createDummyFallingBlock(spawnLocation)
-                CLASSIC -> receiver.sendCreateDummyEntityShulkerOn(spawnLocation)
+                STYLE_11200_11605_ONLY -> {
+                    if (MinecraftVersion.isEqual(11202) || MinecraftVersion.isEqual(11604)) receiver.createDummyFallingBlock(spawnLocation)
+                    else {
+                        warning(
+                            """
+                                Unsupported version: ${MinecraftVersion.versionId}
+                                不支持的版本: ${MinecraftVersion.versionId}
+                            """.t()
+                        )
+                        return
+                    }
+                }
+                CLASSIC_11200_11605_UNIVERSAL -> receiver.sendCreateDummyEntityShulkerOn(spawnLocation)
             } ?: return
             glowingBlocks.computeIfAbsent(receiver){ ConcurrentHashMap() }[block] = GlowingBlockData(pair.first, pair.second, color, mode, block.location, NMS.INSTANCE.getCombinedID(block.location)!!)
             setEntityGlowing0(pair.first, pair.second, receiver, color, INVISIBLE_FLAG)
@@ -111,8 +125,19 @@ internal object GlowManager {
             } else {
                 //若不存在方块数据，则注册并更新发光
                 val pair = when (mode) {
-                    STYLE -> receiver.createDummyFallingBlock(spawnLocation) ?: return
-                    CLASSIC -> receiver.sendCreateDummyEntityShulkerOn(spawnLocation)
+                    STYLE_11200_11605_ONLY -> {
+                        if (MinecraftVersion.isEqual(11202) || MinecraftVersion.isEqual(11604)) receiver.createDummyFallingBlock(spawnLocation) ?: return
+                        else {
+                            warning(
+                                """
+                                Unsupported version: ${MinecraftVersion.versionId}
+                                不支持的版本: ${MinecraftVersion.versionId}
+                            """.t()
+                            )
+                            return
+                        }
+                    }
+                    CLASSIC_11200_11605_UNIVERSAL -> receiver.sendCreateDummyEntityShulkerOn(spawnLocation)
                 }
                 glowingBlocks[receiver]!![block] = GlowingBlockData(pair.first, pair.second, color, mode,  block.location, NMS.INSTANCE.getCombinedID(block.location)!!)
                 setEntityGlowing0(pair.first, pair.second, receiver, color, INVISIBLE_FLAG)
@@ -133,8 +158,8 @@ internal object GlowManager {
             setEntityGlowing0(entityID, entityUUID, receiver, null, INVISIBLE_FLAG)
 
             when (data.mode) {
-                STYLE -> receiver.sendRemoveDummyFallingBlock(entityID, location!!, id!!)
-                CLASSIC -> receiver.sendRemoveDummyEntityShulker(entityID)
+                STYLE_11200_11605_ONLY -> receiver.sendRemoveDummyFallingBlock(entityID, location!!, id!!)
+                CLASSIC_11200_11605_UNIVERSAL -> receiver.sendRemoveDummyEntityShulker(entityID)
             }
 
             glowingBlocks[receiver]!!.remove(block)

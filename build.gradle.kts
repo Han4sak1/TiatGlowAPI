@@ -21,7 +21,7 @@ taboolib {
         install(BukkitNMSUtil)
         install(CommandHelper)
     }
-    version { taboolib = "6.2.2" }
+    version { taboolib = "6.2.3" }
 }
 
 repositories {

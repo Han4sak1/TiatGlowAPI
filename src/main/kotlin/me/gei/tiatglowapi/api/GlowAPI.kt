@@ -30,6 +30,7 @@ object GlowAPI {
      * @param block 目标
      * @param receiver 观察者
      * @param color 颜色, null为取消发光
+     * @mode 模式
      */
     fun setGlowing(block: Block, receiver: Player, color: NamedTextColor?, mode: BlockGlowMode) {
         if (color != null) GlowManager.setBlockGlowing(block, receiver, color, mode)

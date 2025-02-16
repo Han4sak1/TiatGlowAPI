@@ -31,7 +31,6 @@ repositories {
 
 dependencies {
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
-    compileOnly("ink.ptms.core:v11200:11200")
     compileOnly("ink.ptms:nms-all:1.0.0")
     compileOnly("ink.ptms.core:v11802:11802:mapped")
     compileOnly("ink.ptms.core:v11904:11904:mapped")

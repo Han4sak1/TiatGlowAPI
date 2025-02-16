@@ -1,8 +1,8 @@
 package me.gei.tiatglowapi.command
 
 import me.gei.tiatglowapi.internal.manager.GlowManager
+import me.gei.tiatglowapi.internal.pojo.BlockGlowMode
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import taboolib.common.platform.command.*
@@ -24,15 +24,11 @@ object GlowAPICommand {
 
     @CommandBody
     val testEntityGlow = subCommand {
-        dynamic("color") {
-            suggest { ChatColor.values().map { it.name } }
+        execute<CommandSender> { sender, _, _ ->
+            if (sender !is Player) return@execute
 
-            execute<CommandSender> { sender, context, _ ->
-                if (sender !is Player) return@execute
-
-                sender.getNearbyEntities(5.0, 5.0, 5.0).forEach {
-                    GlowManager.setGlowing(it, sender, NamedTextColor.RED)
-                }
+            sender.getNearbyEntities(5.0, 5.0, 5.0).forEach {
+                GlowManager.setEntityGlowing(it, sender, NamedTextColor.RED)
             }
         }
     }
@@ -43,20 +39,20 @@ object GlowAPICommand {
             if (sender !is Player) return@execute
 
             sender.getNearbyEntities(5.0, 5.0, 5.0).forEach {
-                GlowManager.setGlowing(it, sender, null)
+                GlowManager.unsetEntityGlowing(it, sender)
             }
         }
     }
 
     @CommandBody
     val testBlockGlow = subCommand {
-        dynamic("color") {
-            suggest { ChatColor.values().map { it.name } }
+        dynamic("mode") {
+            suggest { BlockGlowMode.values().map { it.name } }
 
-            execute<CommandSender> { sender, context, argument ->
+            execute<CommandSender> { sender, context, _ ->
                 if (sender !is Player) return@execute
 
-                GlowManager.setGlowing(sender.groundBlock, sender, NamedTextColor.AQUA)
+                GlowManager.setBlockGlowing(sender.groundBlock, sender, NamedTextColor.AQUA, BlockGlowMode.valueOf(context["mode"]))
             }
         }
     }
@@ -66,7 +62,7 @@ object GlowAPICommand {
         execute<CommandSender> { sender, _, _ ->
             if (sender !is Player) return@execute
 
-            GlowManager.setGlowing(sender.groundBlock, sender, null)
+            GlowManager.unsetBlockGlowing(sender.groundBlock, sender)
         }
     }
 }

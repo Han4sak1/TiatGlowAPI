@@ -109,11 +109,11 @@ internal object GlowManager {
                 val entityUUID = glowingBlocks[receiver]!![block]!!.entityUUID
                 setEntityGlowing0(entityID, entityUUID, receiver, color, INVISIBLE_FLAG)
             } else {
-                //若不存在方块数据，则注册并更新1发光
+                //若不存在方块数据，则注册并更新发光
                 val pair = when (mode) {
                     STYLE -> receiver.createDummyFallingBlock(spawnLocation) ?: return
                     CLASSIC -> receiver.sendCreateDummyEntityShulkerOn(spawnLocation)
-                } ?: return
+                }
                 glowingBlocks[receiver]!![block] = GlowingBlockData(pair.first, pair.second, color, mode,  block.location, NMS.INSTANCE.getCombinedID(block.location)!!)
                 setEntityGlowing0(pair.first, pair.second, receiver, color, INVISIBLE_FLAG)
             }

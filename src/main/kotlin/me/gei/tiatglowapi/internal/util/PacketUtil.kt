@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.util.Vector3d
 import com.github.retrooper.packetevents.util.Vector3i
 import com.github.retrooper.packetevents.wrapper.play.server.*
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTeams.ScoreBoardTeamInfo
+import io.github.retrooper.packetevents.util.SpigotReflectionUtil
 import me.gei.tiatglowapi.internal.nms.NMS
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -19,6 +20,7 @@ import taboolib.common.platform.function.warning
 import taboolib.common.util.t
 import taboolib.module.nms.MinecraftVersion
 import taboolib.module.nms.MinecraftVersion.V1_19
+import java.util.*
 
 /**
  * me.gei.tiatglowapi.internal.util
@@ -38,7 +40,7 @@ internal object PacketUtil {
 
     fun Player.sendColorBasedTeamCreatePacket(color: NamedTextColor) {
         val teamPrefix =
-            if (MinecraftVersion.isLowerOrEqual(11202)) Component.text("§${color.toLowVersionChatColor().char}") else null //Mojang我干你丫的
+            if (MinecraftVersion.isLowerOrEqual(11202)) Component.text(color.toLowVersionChatColor().toString()) else null //Mojang我干你丫的
 
         val packetPlayOutScoreboardTeam = WrapperPlayServerTeams(
             "glow-$color",
@@ -96,14 +98,15 @@ internal object PacketUtil {
 
     fun Player.sendCreateDummyFallingBlockOn(location: Location): Pair<Int, String>? {
         //FIXME 在11800以上不起作用
-        val pair = NMS.INSTANCE.spawnDummyEntityFallingBlockOn(location) ?: return null
+        val entityUUID = UUID.randomUUID()
+        val entityID = SpigotReflectionUtil.generateEntityId()
         val blockCombinedID = NMS.INSTANCE.getCombinedID(location) ?: return null
 
         info("方块CombineID 为 $blockCombinedID")
 
         val packetPlayOutSpawnEntity = WrapperPlayServerSpawnEntity(
-            pair.first,
-            pair.second,
+            entityID,
+            entityUUID,
             EntityTypes.FALLING_BLOCK,
             com.github.retrooper.packetevents.protocol.world.Location(
                 location.x,
@@ -119,7 +122,7 @@ internal object PacketUtil {
 
         PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutSpawnEntity)
 
-        return Pair(pair.first, pair.second.toString())
+        return Pair(entityID, entityUUID.toString())
     }
 
     fun Player.sendRemoveDummyFallingBlock(entityID: Int, blockLocation: Location, id: Int) {
@@ -138,13 +141,14 @@ internal object PacketUtil {
         PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutBlockChange)
     }
 
-    fun Player.sendCreateDummyEntityShulkerOn(location: Location): Pair<Int, String>? {
-        val pair = NMS.INSTANCE.spawnDummyEntityFallingBlockOn(location) ?: return null
+    fun Player.sendCreateDummyEntityShulkerOn(location: Location): Pair<Int, String> {
+        val entityUUID = UUID.randomUUID()
+        val entityID = SpigotReflectionUtil.generateEntityId()
 
         if (MinecraftVersion.isLower(V1_19)) {
             val packetPlayOutSpawnEntityLiving = WrapperPlayServerSpawnLivingEntity(
-                pair.first,
-                pair.second,
+                entityID,
+                entityUUID,
                 EntityTypes.SHULKER,
                 com.github.retrooper.packetevents.protocol.world.Location(
                     location.x,
@@ -161,8 +165,8 @@ internal object PacketUtil {
             PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutSpawnEntityLiving)
         } else {
             val packetPlayOutSpawnEntityLiving = WrapperPlayServerSpawnEntity(
-                pair.first,
-                pair.second,
+                entityID,
+                entityUUID,
                 EntityTypes.SHULKER,
                 com.github.retrooper.packetevents.protocol.world.Location(
                     location.x,
@@ -179,7 +183,7 @@ internal object PacketUtil {
             PacketEvents.getAPI().playerManager.sendPacket(this, packetPlayOutSpawnEntityLiving)
         }
 
-        return Pair(pair.first, pair.second.toString())
+        return Pair(entityID, entityUUID.toString())
     }
 
     fun Player.sendRemoveDummyEntityShulker(entityID: Int) {
